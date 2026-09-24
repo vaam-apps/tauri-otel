@@ -1,0 +1,128 @@
+# The Rust and TypeScript suites, on every platform the plugin claims.
+#
+# Split by runner so a failure names the platform that broke. The Rust suite
+# runs for real on Linux, Windows and macOS, including the end-to-end test,
+# which drives a mock Tauri app through the real ACL into a loopback OTLP
+# receiver. Android cannot run it without a device, so it gets a full
+# clippy build against the NDK instead: `ring` compiles C for the target, and
+# that is the step that fails without a real toolchain. iOS gets a
+# `cargo check` on the macOS runner for the same reason.
+#
+# `dtolnay/rust-toolchain` is pinned to the commit its `stable` branch
+# resolved to, not to `@stable`: the org lint (Super-linter's zizmor audit)
+# rejects any `uses:` that is not a commit SHA, and that action has no tags.
+# The Rust version installed is still `toolchain: stable`, so pinning freezes
+# the action's own code, not the compiler.
+name: tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: rust (linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the Linux WebView dependencies
+        # `tauri` links against webkit2gtk even for a headless test binary.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libsoup-3.0-dev \
+            libjavascriptcoregtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable, resolved 2026-09-24
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+
+  windows:
+    name: rust (windows)
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable, resolved 2026-09-24
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
+      - run: cargo test
+
+  apple:
+    name: rust (macos, and an ios check)
+    runs-on: macos-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable, resolved 2026-09-24
+        with:
+          toolchain: stable
+          targets: aarch64-apple-ios
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
+      - run: cargo test
+      - run: cargo check --target aarch64-apple-ios
+
+  android:
+    name: rust (android, clippy against the ndk)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable, resolved 2026-09-24
+        with:
+          toolchain: stable
+          components: clippy
+          targets: aarch64-linux-android
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
+      # The runner ships an NDK and exports its path; nothing is downloaded.
+      # API level 24 is Tauri's own Android minimum.
+      - name: Point cargo at the runner's NDK
+        run: |
+          set -euo pipefail
+          test -n "${ANDROID_NDK_LATEST_HOME:-}"
+          bin="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          test -x "$bin/aarch64-linux-android24-clang"
+          {
+            echo "CC_aarch64_linux_android=$bin/aarch64-linux-android24-clang"
+            echo "AR_aarch64_linux_android=$bin/llvm-ar"
+            echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$bin/aarch64-linux-android24-clang"
+          } >> "$GITHUB_ENV"
+      - run: cargo clippy --target aarch64-linux-android --all-targets -- -D warnings
+
+  typescript:
+    name: typescript
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build

@@ -1,0 +1,27 @@
+{
+  "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "spanId": "00f067aa0ba902b7",
+  "parentSpanId": "53995c3f42cd8ad8",
+  "traceFlags": 1,
+  "name": "GET /listings",
+  "kind": 2,
+  "startTime": [1758700000, 250000000],
+  "endTime": [1758700001, 0],
+  "attributes": {
+    "http.request.method": "GET",
+    "http.response.status_code": 200,
+    "retry.ratio": 0.5,
+    "tags": ["a", "b"],
+    "ignored.object": { "no": "objects" },
+    "ignored.null": null,
+    "ignored.mixed": [1, "x"]
+  },
+  "events": [
+    { "name": "exception", "time": [1758700000, 500000000], "attributes": { "exception.message": "boom" } }
+  ],
+  "links": [
+    { "traceId": "0af7651916cd43dd8448eb211c80319c", "spanId": "b7ad6b7169203331", "attributes": {} }
+  ],
+  "status": { "code": 2, "message": "boom" },
+  "scope": { "name": "@vaam/vendor", "version": "1.2.0" }
+}

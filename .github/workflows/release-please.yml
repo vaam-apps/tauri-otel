@@ -1,0 +1,103 @@
+name: release-please
+
+# Proposes the next release as a pull request, and cuts the tag when that
+# pull request merges.
+#
+# This workflow never publishes anything itself — there is no `release.yml`
+# in this repo. The plugin is consumed by git ref (Cargo `git =`, npm
+# `github:`), the same way its sibling plugins in this organisation are, so
+# the Rust crate and the JS package can never be installed at two different
+# versions. What this workflow buys is a changelog and one tagged, citable
+# version that covers both halves at once.
+#
+# ---------------------------------------------------------------------------
+# Why a GitHub App token and not GITHUB_TOKEN
+# ---------------------------------------------------------------------------
+# This is load-bearing, not hygiene. GitHub deliberately does not raise
+# workflow events for anything done with the default `GITHUB_TOKEN`, to stop
+# a workflow triggering itself. So with `GITHUB_TOKEN` the `vX.Y.Z` tag would
+# still be created, but the release PR would get no CI run at all — the same
+# "a check that cannot run before merge is not a check" gap this org's own
+# release guide (vaam-apps/.github, docs/releasing.md) documents at length.
+#
+# The App needs, on this repository only: `contents: write` (branches, tags,
+# releases) and `pull-requests: write`. Its id and private key are the
+# organization secrets RELEASE_PLEASE_APP_CLIENT_ID (the App's **Client ID**,
+# `Iv23li…`, not its numeric App ID — `app-id` is deprecated and the two are
+# different values on the App's settings page) and
+# RELEASE_PLEASE_APP_PRIVATE_KEY (visibility: all, so this repo already has
+# both). If either is missing the token step fails outright rather than
+# silently falling back to GITHUB_TOKEN — a fallback would produce exactly
+# the silent "tag exists, nothing ran" gap above.
+#
+# ---------------------------------------------------------------------------
+# Why `release-type: simple`, and what the extra-files do
+# ---------------------------------------------------------------------------
+# This repository ships two artefacts from one version: the Rust crate
+# (`Cargo.toml`) and the JS API package (`package.json`). There is no
+# release-please strategy that updates a Cargo manifest AND a package.json,
+# so `simple` owns the version in `.release-please-manifest.json` and both
+# manifests are `extra-files`:
+#
+#   * `Cargo.toml` uses the `generic` updater, which rewrites the one line
+#     carrying an `x-release-please-version` comment. A targeted line replace,
+#     not a reparse-and-reserialize — the latter is what destroyed a
+#     `Chart.yaml` in a sibling repo.
+#   * `package.json` uses the `json` updater with `$.version`, because JSON
+#     has no comments for the annotation to live in.
+#
+# Nothing is published to crates.io or npm by this workflow, deliberately.
+# What it buys is a changelog and a tagged, citable version for anyone
+# pinning this plugin by git ref.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Never cancel a run that may be mid-way through opening or updating the
+# release PR. Keyed per ref: under a global key, a routine push to main could
+# cancel a still-pending release-please run for a different ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+# The App token below carries every write this workflow performs; the
+# workflow's own GITHUB_TOKEN needs nothing beyond reading the checkout.
+permissions:
+  contents: read
+
+jobs:
+  release-please:
+    name: propose the next release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mint a GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          # `client-id`, not the deprecated `app-id`. They are DIFFERENT
+          # values on the App's settings page — `app-id` is the numeric
+          # App ID, `client-id` is the `Iv23li…` Client ID — so the secret
+          # is named for the one this input actually wants.
+          client-id: ${{ secrets.RELEASE_PLEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
+          # No `owner`/`repositories` input: per the action's own README,
+          # omitting both scopes the token to only the current repository —
+          # the narrowest repo scope available, not the App's whole
+          # installation. Permissions are scoped down explicitly too
+          # (zizmor's `github-app` audit, "dangerous use of GitHub App
+          # tokens": by default this action issues a token carrying every
+          # permission the App holds org-wide, not just what this workflow
+          # uses) to exactly the two this job performs: opening/updating a
+          # branch and PR.
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Open or update the release PR
+        id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

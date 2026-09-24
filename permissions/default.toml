@@ -1,0 +1,15 @@
+"$schema" = "schemas/schema.json"
+
+# Both commands are allowed by default, and neither can do harm: `log` and
+# `export_spans` only hand the page's own telemetry to the exporter, which
+# drops what does not parse and exports under the app's identity, not the
+# page's. The worst a hostile page could do with them is spend the app's
+# collector quota — which it could equally do with `console.error` in a loop
+# once the app forwards errors. An app that does not instrument its frontend
+# should leave `otel:default` out of its capability rather than narrow it.
+[default]
+description = """
+Allows the webview to send its log records and finished spans to the
+plugin's exporters.
+"""
+permissions = ["allow-log", "allow-export-spans"]
