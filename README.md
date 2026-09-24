@@ -35,12 +35,12 @@ identity to keep in step, and one floor over both halves of the app.
 Before writing it, we looked for a plugin that already did this (2026-09-24,
 crates.io and npm):
 
-| candidate | what it is | why it was not enough |
-|---|---|---|
-| [`tauri-plugin-tracing`](https://github.com/fltsci/tauri-plugin-tracing) 0.3.4 | a `tracing` subscriber for Tauri: console, file and webview log targets, JS→Rust log forwarding | OpenTelemetry is only "bring your own layer". No OTLP export, no webview spans, no trace context across `invoke`, no resource identity, no export floor. Its platform table marks only macOS as fully supported. |
-| [`tauri-plugin-auditaur`](https://github.com/sethjuarez/auditaur) 0.4.7 | development-time telemetry into a local SQLite store, read by a CLI and an MCP server | Built for development, not for shipping. No OTLP export (listed as "planned"). |
-| [`tauri-plugin-sentry`](https://github.com/timfish/sentry-tauri) 0.6.0 | Sentry for Tauri | Sentry's protocol, not OpenTelemetry's. |
-| `tauri-plugin-telemetry`, `tauri-plugin-tauri-watch`, `tauri-plugin-posthog-anon` | product analytics | Events for analytics backends, not traces or logs. |
+| candidate                                                                         | what it is                                                                                      | why it was not enough                                                                                                                                                                                            |
+| --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`tauri-plugin-tracing`](https://github.com/fltsci/tauri-plugin-tracing) 0.3.4    | a `tracing` subscriber for Tauri: console, file and webview log targets, JS→Rust log forwarding | OpenTelemetry is only "bring your own layer". No OTLP export, no webview spans, no trace context across `invoke`, no resource identity, no export floor. Its platform table marks only macOS as fully supported. |
+| [`tauri-plugin-auditaur`](https://github.com/sethjuarez/auditaur) 0.4.7           | development-time telemetry into a local SQLite store, read by a CLI and an MCP server           | Built for development, not for shipping. No OTLP export (listed as "planned").                                                                                                                                   |
+| [`tauri-plugin-sentry`](https://github.com/timfish/sentry-tauri) 0.6.0            | Sentry for Tauri                                                                                | Sentry's protocol, not OpenTelemetry's.                                                                                                                                                                          |
+| `tauri-plugin-telemetry`, `tauri-plugin-tauri-watch`, `tauri-plugin-posthog-anon` | product analytics                                                                               | Events for analytics backends, not traces or logs.                                                                                                                                                               |
 
 None exports OTLP from both halves of the app with trace context across the IPC.
 So this plugin does that, and nothing else.
@@ -115,20 +115,20 @@ fn main() {
 }
 ```
 
-| builder method | default | what it decides |
-|---|---|---|
-| `new(service_name, deployment_environment_name)` | **required** | `service.name` and `deployment.environment.name` |
-| `endpoint(url)` | none: nothing is exported | the collector's base URL; `/v1/traces` and `/v1/logs` are appended |
-| `export_floor(level)` | `WARN` | the least severe log record exported on its own |
-| `breadcrumbs(n)` | `12` | how many withheld records an `ERROR` carries; `0` turns them off |
-| `filter(directives)` | `info` | which spans and events reach the subscriber at all (`EnvFilter` syntax) |
-| `span_level(level)` | `INFO` | the least severe `tracing` span that is exported |
-| `sample_ratio(r)` | `1.0` | head sampling, parent-based |
-| `build_id(id)` | none | `app.build_id` |
-| `resource_attribute(kv)` | none | any other resource attribute; wins over detection |
-| `header(name, value)` | none | sent with every export. Compiled into the binary, so it is an ingestion key, never a secret |
-| `timeout(d)` | 10 s | one export's budget |
-| `console(bool)` | debug builds only | also print to stderr |
+| builder method                                   | default                   | what it decides                                                                             |
+| ------------------------------------------------ | ------------------------- | ------------------------------------------------------------------------------------------- |
+| `new(service_name, deployment_environment_name)` | **required**              | `service.name` and `deployment.environment.name`                                            |
+| `endpoint(url)`                                  | none: nothing is exported | the collector's base URL; `/v1/traces` and `/v1/logs` are appended                          |
+| `export_floor(level)`                            | `WARN`                    | the least severe log record exported on its own                                             |
+| `breadcrumbs(n)`                                 | `12`                      | how many withheld records an `ERROR` carries; `0` turns them off                            |
+| `filter(directives)`                             | `info`                    | which spans and events reach the subscriber at all (`EnvFilter` syntax)                     |
+| `span_level(level)`                              | `INFO`                    | the least severe `tracing` span that is exported                                            |
+| `sample_ratio(r)`                                | `1.0`                     | head sampling, parent-based                                                                 |
+| `build_id(id)`                                   | none                      | `app.build_id`                                                                              |
+| `resource_attribute(kv)`                         | none                      | any other resource attribute; wins over detection                                           |
+| `header(name, value)`                            | none                      | sent with every export. Compiled into the binary, so it is an ingestion key, never a secret |
+| `timeout(d)`                                     | 10 s                      | one export's budget                                                                         |
+| `console(bool)`                                  | debug builds only         | also print to stderr                                                                        |
 
 A command that should continue the webview's trace takes a `TraceParent`, and
 hands it the span **before the span is entered**:
@@ -171,14 +171,14 @@ log.info('listing editor opened', { listing: id })   // withheld unless an error
 await tracedInvoke('save_listing', { draft })         // one trace, page to Rust
 ```
 
-| export | what it is |
-|---|---|
-| `TauriSpanExporter` | an OpenTelemetry-JS `SpanExporter` that sends finished spans over the IPC. The provider's own resource is ignored |
-| `log.{trace,debug,info,warn,error}(message, attributes?)` | a log record through the export floor, carrying the active span. Records written in one task leave in one IPC call |
-| `captureErrors(target = window)` | uncaught errors and unhandled rejections as `error` records with `exception.*`. Returns the uninstaller |
-| `tracedInvoke(cmd, args?, options?)` | `invoke` in a `CLIENT` span, with the span sent as `traceparent`. A rejection marks the span and is re-thrown unchanged |
-| `traceHeaders()`, `withTraceparent(headers)` | the same header, for calling `invoke` yourself |
-| `flushLogs()`, `available()` | send queued records now; whether the page is in Tauri at all |
+| export                                                    | what it is                                                                                                              |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `TauriSpanExporter`                                       | an OpenTelemetry-JS `SpanExporter` that sends finished spans over the IPC. The provider's own resource is ignored       |
+| `log.{trace,debug,info,warn,error}(message, attributes?)` | a log record through the export floor, carrying the active span. Records written in one task leave in one IPC call      |
+| `captureErrors(target = window)`                          | uncaught errors and unhandled rejections as `error` records with `exception.*`. Returns the uninstaller                 |
+| `tracedInvoke(cmd, args?, options?)`                      | `invoke` in a `CLIENT` span, with the span sent as `traceparent`. A rejection marks the span and is re-thrown unchanged |
+| `traceHeaders()`, `withTraceparent(headers)`              | the same header, for calling `invoke` yourself                                                                          |
+| `flushLogs()`, `available()`                              | send queued records now; whether the page is in Tauri at all                                                            |
 
 Outside Tauri, in a plain browser during development, every function is a quiet
 no-op. When the plugin is present but unreachable (no capability, for example),
@@ -186,15 +186,15 @@ the first failure prints one `console.warn`.
 
 ## The identity a build reports under
 
-| attribute | from |
-|---|---|
-| `service.name` | `Builder::new`, required |
-| `deployment.environment.name` | `Builder::new`, required. The stable key; the deprecated `deployment.environment` is never sent |
-| `service.version` | the **installed artifact**: Tauri's `PackageInfo`, i.e. `tauri.conf.json`'s `version` compiled into the binary |
-| `app.build_id` | `Builder::build_id`, when given |
-| `service.instance.id` | random per process |
-| `os.type`, `os.name`, `os.version`, `host.arch` | the platform, in the semantic conventions' own spelling (`darwin` for macOS and iOS, `amd64`/`arm64`) |
-| `telemetry.distro.*`, `telemetry.sdk.*` | this plugin, and the SDK underneath it |
+| attribute                                       | from                                                                                                           |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `service.name`                                  | `Builder::new`, required                                                                                       |
+| `deployment.environment.name`                   | `Builder::new`, required. The stable key; the deprecated `deployment.environment` is never sent                |
+| `service.version`                               | the **installed artifact**: Tauri's `PackageInfo`, i.e. `tauri.conf.json`'s `version` compiled into the binary |
+| `app.build_id`                                  | `Builder::build_id`, when given                                                                                |
+| `service.instance.id`                           | random per process                                                                                             |
+| `os.type`, `os.name`, `os.version`, `host.arch` | the platform, in the semantic conventions' own spelling (`darwin` for macOS and iOS, `amd64`/`arm64`)          |
+| `telemetry.distro.*`, `telemetry.sdk.*`         | this plugin, and the SDK underneath it                                                                         |
 
 Two things are deliberately not defaulted. A silent default is how a build comes
 to report the wrong identity without anyone noticing.
