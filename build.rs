@@ -8,4 +8,38 @@ const COMMANDS: &[&str] = &["log", "export_spans"];
 
 fn main() {
     tauri_plugin::Builder::new(COMMANDS).build();
+    embed_windows_test_manifest();
+}
+
+/// Gives this crate's own test binaries a Common-Controls v6 manifest on
+/// Windows.
+///
+/// Without it, a test binary that links Tauri's windowing stack dies before
+/// `main` with `STATUS_ENTRYPOINT_NOT_FOUND` (0xc0000139): it imports entry
+/// points only v6 of comctl32 exports, and Windows loads v6 only for an
+/// executable whose manifest asks for it. An app gets that manifest from
+/// `tauri-build`; a test binary gets nothing. Tauri's own `build.rs` applies
+/// the same workaround to its own tests (see its `embed_manifest_for_tests`).
+///
+/// `rustc-link-arg-tests` scopes the flags to this package's test targets:
+/// the library, and every app that depends on it, are linked exactly as
+/// before.
+fn embed_windows_test_manifest() {
+    let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+    let target_env = std::env::var("CARGO_CFG_TARGET_ENV").unwrap_or_default();
+    if target_os != "windows" || target_env != "msvc" {
+        return;
+    }
+    let Ok(root) = std::env::var("CARGO_MANIFEST_DIR") else {
+        return;
+    };
+    let manifest = std::path::Path::new(&root)
+        .join("tests")
+        .join("windows-test-manifest.xml");
+    println!("cargo:rerun-if-changed={}", manifest.display());
+    println!("cargo:rustc-link-arg-tests=/MANIFEST:EMBED");
+    println!(
+        "cargo:rustc-link-arg-tests=/MANIFESTINPUT:{}",
+        manifest.display()
+    );
 }
