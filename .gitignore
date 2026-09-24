@@ -1,0 +1,15 @@
+# Miscellaneous
+*.log
+*.swp
+.DS_Store
+.idea/
+
+# Rust
+target/
+# A plugin is a library: Cargo.lock pins a consumer's dependency graph, which
+# is the app's decision to make, not this crate's.
+/Cargo.lock
+
+# Node / the JS API package
+node_modules/
+/dist-js/
