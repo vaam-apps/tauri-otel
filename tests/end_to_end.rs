@@ -167,6 +167,18 @@ fn save_listing(parent: TraceParent) -> String {
 const TRACE: &str = "4bf92f3577b34da6a3ce929d0e0e4736";
 const PAGE_SPAN: &str = "00f067aa0ba902b7";
 
+/// The origin Tauri treats as the app's own, which differs by platform: wry
+/// serves the app over `http://tauri.localhost` on Windows and Android and
+/// over `tauri://localhost` elsewhere (`tauri` 2.11, `tauri_protocol_url`).
+/// A request from anything else is remote, and the ACL refuses it.
+fn local_origin() -> &'static str {
+    if cfg!(any(windows, target_os = "android")) {
+        "http://tauri.localhost"
+    } else {
+        "tauri://localhost"
+    }
+}
+
 fn invoke(
     webview: &tauri::WebviewWindow<tauri::test::MockRuntime>,
     cmd: &str,
@@ -183,7 +195,7 @@ fn invoke(
             cmd: cmd.into(),
             callback: CallbackFn(0),
             error: CallbackFn(1),
-            url: "tauri://localhost".parse().unwrap(),
+            url: local_origin().parse().unwrap(),
             body: InvokeBody::Json(body),
             headers,
             invoke_key: INVOKE_KEY.into(),
