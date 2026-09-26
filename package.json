@@ -1,6 +1,6 @@
 {
   "name": "tauri-plugin-otel-api",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The webview half of tauri-plugin-otel: an OpenTelemetry-JS span exporter, log forwarding and trace propagation over the Tauri IPC.",
   "license": "MIT",
   "repository": {

@@ -1,6 +1,6 @@
 [package]
 name = "tauri-plugin-otel"
-version = "0.1.0" # x-release-please-version
+version = "0.1.1" # x-release-please-version
 description = "OpenTelemetry for Tauri v2: OTLP/HTTP traces and logs from Rust and the webview, one resource, one export floor."
 authors = ["Vaam <oss@vaam.app>"]
 license = "MIT"
