@@ -86,6 +86,14 @@ tauri-plugin-otel = { git = "https://github.com/vaam-apps/tauri-otel", tag = "v0
 ```
 
 The JS package builds itself on install (`prepare`), so `dist-js/` is never committed.
+pnpm 10 refuses to run a git-hosted package's build scripts until it is
+allowlisted, and fails the install with `ERR_PNPM_GIT_DEP_PREPARE_NOT_ALLOWED`:
+
+```yaml
+# pnpm-workspace.yaml
+onlyBuiltDependencies:
+  - tauri-plugin-otel-api
+```
 
 Allow the webview to call the plugin in a capability:
 
@@ -307,6 +315,19 @@ npm ci && npm run typecheck && npm test && npm run build
   seconds, which was checked by hand when it was written.
 - **CI** runs the Rust suite on Linux, Windows and macOS. It builds and lints
   the whole crate for Android against the runner's NDK, and checks iOS.
+
+## Agent skill
+
+`skills/tauri-otel/SKILL.md` is an agent skill for wiring and debugging the
+plugin: the install order, the traps, and how to check that telemetry arrives.
+Install it into the project that uses the plugin:
+
+```bash
+npx skills add vaam-apps/tauri-otel --skill tauri-otel
+```
+
+It is verified against a named release, and says so at the top. Update it in
+the same pull request as any change to the behaviour it describes.
 
 ## Licence
 
