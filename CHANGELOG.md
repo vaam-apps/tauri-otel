@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/vaam-apps/tauri-otel/compare/v0.1.0...v0.1.1) (2026-09-26)
+
+
+### Documentation
+
+* an agent skill for wiring the plugin, and pnpm's build allowlist ([#5](https://github.com/vaam-apps/tauri-otel/issues/5)) ([4a62a9f](https://github.com/vaam-apps/tauri-otel/commit/4a62a9f779edb8859d2d284d2d61d6f93fa72ac3))
+
 ## 0.1.0 (2026-09-24)
 
 
