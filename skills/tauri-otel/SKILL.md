@@ -26,14 +26,14 @@ when you wire it: never make a feature wait on, or fail because of, telemetry.
 ```toml
 # src-tauri/Cargo.toml
 [dependencies]
-tauri-plugin-otel = { git = "https://github.com/vaam-apps/tauri-otel", tag = "v0.1.1" } # x-release-please-version
+tauri-plugin-otel = { git = "https://github.com/vaam-apps/tauri-otel", tag = "v0.1.2" } # x-release-please-version
 tracing = "0.1"
 ```
 
 ```jsonc
 // package.json
 "dependencies": {
-  "tauri-plugin-otel-api": "github:vaam-apps/tauri-otel#v0.1.1", // x-release-please-version
+  "tauri-plugin-otel-api": "github:vaam-apps/tauri-otel#v0.1.2", // x-release-please-version
   "@opentelemetry/api": "^1.9.0",
   "@opentelemetry/sdk-trace-web": "^2"
 }

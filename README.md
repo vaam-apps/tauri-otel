@@ -74,13 +74,13 @@ the crate and the JS package always come from the same release.
 ```toml
 # src-tauri/Cargo.toml
 [dependencies]
-tauri-plugin-otel = { git = "https://github.com/vaam-apps/tauri-otel", tag = "v0.1.1" } # x-release-please-version
+tauri-plugin-otel = { git = "https://github.com/vaam-apps/tauri-otel", tag = "v0.1.2" } # x-release-please-version
 ```
 
 ```jsonc
 // package.json
 "dependencies": {
-  "tauri-plugin-otel-api": "github:vaam-apps/tauri-otel#v0.1.1", // x-release-please-version
+  "tauri-plugin-otel-api": "github:vaam-apps/tauri-otel#v0.1.2", // x-release-please-version
   "@opentelemetry/api": "^1.9.0"
 }
 ```
