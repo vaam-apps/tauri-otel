@@ -74,16 +74,20 @@ the crate and the JS package always come from the same release.
 ```toml
 # src-tauri/Cargo.toml
 [dependencies]
-tauri-plugin-otel = { git = "https://github.com/vaam-apps/tauri-otel", tag = "v0.1.0" }
+tauri-plugin-otel = { git = "https://github.com/vaam-apps/tauri-otel", tag = "v0.1.1" } # x-release-please-version
 ```
 
 ```jsonc
 // package.json
 "dependencies": {
-  "tauri-plugin-otel-api": "github:vaam-apps/tauri-otel#v0.1.0",
+  "tauri-plugin-otel-api": "github:vaam-apps/tauri-otel#v0.1.1", // x-release-please-version
   "@opentelemetry/api": "^1.9.0"
 }
 ```
+
+Drop the `x-release-please-version` comments when you copy these lines. They
+let this repository's release PRs move both pins together. In an app that runs
+release-please too, they would rewrite the pin to the app's own version.
 
 The JS package builds itself on install (`prepare`), so `dist-js/` is never committed.
 pnpm 10 refuses to run a git-hosted package's build scripts until it is
