@@ -5,7 +5,7 @@ description: "Wiring and debugging tauri-plugin-otel (the vaam-apps/tauri-otel r
 
 # tauri-otel
 
-> **Verified against tauri-otel `v0.1.0` (`57de3c9`, 2026-09-24).** On another
+> **Verified against tauri-otel `v0.1.1` (`bd4b0a3`, 2026-09-27).** On another
 > version, trust the repository's README and code over this page.
 
 `tauri-plugin-otel` exports traces and logs over OTLP/HTTP (protobuf, gzip) from
@@ -26,18 +26,22 @@ when you wire it: never make a feature wait on, or fail because of, telemetry.
 ```toml
 # src-tauri/Cargo.toml
 [dependencies]
-tauri-plugin-otel = { git = "https://github.com/vaam-apps/tauri-otel", tag = "v0.1.0" }
+tauri-plugin-otel = { git = "https://github.com/vaam-apps/tauri-otel", tag = "v0.1.1" } # x-release-please-version
 tracing = "0.1"
 ```
 
 ```jsonc
 // package.json
 "dependencies": {
-  "tauri-plugin-otel-api": "github:vaam-apps/tauri-otel#v0.1.0",
+  "tauri-plugin-otel-api": "github:vaam-apps/tauri-otel#v0.1.1", // x-release-please-version
   "@opentelemetry/api": "^1.9.0",
   "@opentelemetry/sdk-trace-web": "^2"
 }
 ```
+
+Drop the `x-release-please-version` comments when you copy these lines. They
+let this repository's release PRs move both pins together. In an app that runs
+release-please too, they would rewrite the pin to the app's own version.
 
 Always move both references to a new tag together. The TypeScript producer and
 the Rust consumer share one wire format, pinned by `fixtures/wire-span.json`.
@@ -53,7 +57,7 @@ onlyBuiltDependencies:
   - tauri-plugin-otel-api
 ```
 
-npm needs nothing extra. Both were checked against `v0.1.0`.
+npm needs nothing extra. Both were checked against `v0.1.1`.
 
 ### 2. Grant the capability
 
@@ -287,7 +291,7 @@ front end with that front end's own telemetry.
 
 The vendor app's contract is `docs/tauri-observability.md` in
 `vaam-apps/vaam-apps`. When that page and this skill disagree, the page wins.
-As of `v0.1.0` it says:
+As of `v0.1.1` it says:
 
 ```rust
 tauri_plugin_otel::Builder::new("vaam-vendor", DEPLOYMENT_ENVIRONMENT_NAME)

@@ -67,6 +67,14 @@
           "path": "Cargo.toml"
         },
         {
+          "type": "generic",
+          "path": "README.md"
+        },
+        {
+          "type": "generic",
+          "path": "skills/tauri-otel/SKILL.md"
+        },
+        {
           "type": "json",
           "path": "package.json",
           "jsonpath": "$.version"
