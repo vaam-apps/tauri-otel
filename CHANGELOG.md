@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/vaam-apps/tauri-otel/compare/v0.1.1...v0.1.2) (2026-09-27)
+
+
+### Documentation
+
+* pin v0.1.1 in the README and the skill, and let releases move the pins ([#7](https://github.com/vaam-apps/tauri-otel/issues/7)) ([69f5f0b](https://github.com/vaam-apps/tauri-otel/commit/69f5f0bc6f8028786282777da6c57bcaca1c3803))
+
 ## [0.1.1](https://github.com/vaam-apps/tauri-otel/compare/v0.1.0...v0.1.1) (2026-09-26)
 
 
