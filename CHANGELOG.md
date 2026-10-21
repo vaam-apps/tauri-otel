@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/vaam-apps/tauri-otel/compare/v0.1.2...v0.1.3) (2026-10-21)
+
+
+### Documentation
+
+* a documentation site on the vaam-apps Material 3 theme ([#9](https://github.com/vaam-apps/tauri-otel/issues/9)) ([cfc1a24](https://github.com/vaam-apps/tauri-otel/commit/cfc1a243939d1500786d81ef0125a6e25a87c43b))
+
 ## [0.1.2](https://github.com/vaam-apps/tauri-otel/compare/v0.1.1...v0.1.2) (2026-09-27)
 
 
