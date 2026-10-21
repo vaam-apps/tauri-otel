@@ -13,3 +13,7 @@ target/
 # Node / the JS API package
 node_modules/
 /dist-js/
+
+# The docs site (docs/)
+docs/.vitepress/dist
+docs/.vitepress/cache
